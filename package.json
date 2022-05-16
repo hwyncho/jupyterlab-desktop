@@ -38,11 +38,11 @@
       "ext": "ipynb"
     },
     "files": [
-      "!**/*.d.ts",
-      "!env_installer/Miniconda3*.*"
+      "!**/*.d.ts"
     ],
     "extraResources": [
-      "env_installer/Miniconda3-*[.sh,.exe]"
+      "env_installer/Miniconda3-*[.sh,.exe]",
+      "env_installer/requirements.txt"
     ],
     "linux": {
       "target": [

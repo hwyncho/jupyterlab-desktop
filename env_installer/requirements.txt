@@ -1,0 +1,9 @@
+black>=19.3b0
+flake8>=3.9
+isort>=5.7
+jupyterlab==3.2.9
+mypy>=0.910
+pylint>=2.9
+pytest-cov>=2.12
+pytest-mock>=3.6
+pytest>=6.2
