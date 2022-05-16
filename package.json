@@ -42,10 +42,10 @@
     },
     "files": [
       "!**/*.d.ts",
-      "!env_installer/JupyterLab*.*"
+      "!env_installer/Miniconda3*.*"
     ],
     "extraResources": [
-      "env_installer/JupyterLabDesktopAppServer-*[.sh,.exe]"
+      "env_installer/Miniconda3-*[.sh,.exe]"
     ],
     "linux": {
       "target": [
@@ -87,9 +87,10 @@
       ]
     },
     "nsis": {
-      "oneClick": "false",
+      "oneClick": false,
       "artifactName": "${productName}-Setup.${ext}",
-      "perMachine": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
       "deleteAppDataOnUninstall": true,
       "license": "LICENSE",
       "language": "1033",
