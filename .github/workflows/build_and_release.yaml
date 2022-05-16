@@ -54,12 +54,12 @@ jobs:
           fetch-depth: 0
           lfs: true
       - name: Install NodeJS 16
-        if: matrix.runnner.architecture != "arm64"
+        if: ${{ matrix.runner.architecture != 'arm64' }
         uses: actions/setup-node@v3
         with:
           node-version: 16
       - name: Set up npm cache
-        if: matrix.runnner.architecture != "arm64"
+        if: ${{ matrix.runner.architecture != 'arm64' }}
         id: npm-cache
         uses: actions/cache@v2
         with:
@@ -77,12 +77,12 @@ jobs:
           npm run dist:${{ matrix.runner.platform }}
 
           if [[ "${{ runner.os }}" == "Linux" ]]; then
-            mv dist/JupyterLab.deb dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runnner.architecture }}.deb
-            mv dist/JupyterLab.rpm dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runnner.architecture }}.rpm
+            mv dist/JupyterLab.deb dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runner.architecture }}.deb
+            mv dist/JupyterLab.rpm dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runner.architecture }}.rpm
           elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            mv dist/JupyterLab.pkg dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runnner.architecture }}.pkg
+            mv dist/JupyterLab.pkg dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runner.architecture }}.pkg
           elif [[ "${{ runner.os }}" == "Windows" ]]; then
-            mv dist/JupyterLab-Setup.exe dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runnner.architecture }}.exe
+            mv dist/JupyterLab-Setup.exe dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runner.architecture }}.exe
           else
             exit 1
           fi
