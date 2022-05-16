@@ -238,8 +238,9 @@ class JupyterServer {
                         res();
                     });
                 } else {
-                    this._nbServer.kill();
-                    res();
+                    execFile('pkill', ['-TERM', '-P', String(this._nbServer.pid)], () => {
+                        res();
+                    });
                 }
             } else {
                 res();
