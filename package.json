@@ -87,9 +87,10 @@
       ]
     },
     "nsis": {
-      "oneClick": "false",
+      "oneClick": false,
       "artifactName": "${productName}-Setup.${ext}",
-      "perMachine": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
       "deleteAppDataOnUninstall": true,
       "license": "LICENSE",
       "language": "1033",
