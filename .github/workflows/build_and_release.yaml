@@ -5,6 +5,7 @@ on:
     inputs:
       release_tag:
         description: Release tag
+        type: string
         required: true
       is_prerelease:
         description: Prerelease
