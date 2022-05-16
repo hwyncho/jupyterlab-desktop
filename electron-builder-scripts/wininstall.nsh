@@ -348,7 +348,7 @@ FunctionEnd
 
   System::Call 'Kernel32::SetEnvironmentVariable(t, t)i ("PATH", "$INSTDIR;$INSTDIR\resources\jlab_server;$INSTDIR\resources\jlab_server\Library\mingw-w64\bin;$INSTDIR\resources\jlab_server\Library\usr\bin;$INSTDIR\resources\jlab_server\Library\bin;$INSTDIR\resources\jlab_server\Scripts").r0'
 
-  ExecWait '"$INSTDIR\resources\jlab_server\Scripts\conda.exe" install --name base --yes jupyterlab==3.2.9'
+  ExecWait '"$INSTDIR\resources\jlab_server\python.exe" -m pip install -r $INSTDIR\resources\env_installer\requirements.txt'
 !macroend
 
 !macro customUnInstall

@@ -11,7 +11,7 @@ declare conda_prefix="${app_prefix}/resources/jlab_server"
 /usr/bin/curl -L "${conda_mirror}/${conda_script}" --output "${env_installer}/${conda_script}"
 
 /bin/bash "${env_installer}/${conda_script}" -b -p "${conda_prefix}"
-"${conda_prefix}/bin/conda" install --name base --yes "jupyterlab==3.2.9"
+"${conda_prefix}/bin/python3" -m pip install -r "${env_installer}/requirements.txt"
 
 /bin/ln -s "${app_prefix}/resources/app/jlab" /usr/bin/jlab
 /bin/chmod 755 "${app_prefix}/resources/app/jlab"
