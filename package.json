@@ -42,10 +42,10 @@
     },
     "files": [
       "!**/*.d.ts",
-      "!env_installer/JupyterLab*.*"
+      "!env_installer/Miniconda3*.*"
     ],
     "extraResources": [
-      "env_installer/JupyterLabDesktopAppServer-*[.sh,.exe]"
+      "env_installer/Miniconda3-*[.sh,.exe]"
     ],
     "linux": {
       "target": [
