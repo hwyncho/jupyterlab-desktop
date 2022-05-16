@@ -53,12 +53,12 @@ jobs:
           fetch-depth: 0
           lfs: true
       - name: Install NodeJS 16
-        if: ${{ matrix.runnner.architecture != "arm64" }}
+        if: matrix.runnner.architecture != "arm64"
         uses: actions/setup-node@v3
         with:
           node-version: 16
       - name: Set up npm cache
-        if: ${{ matrix.runnner.architecture != "arm64" }}
+        if: matrix.runnner.architecture != "arm64"
         id: npm-cache
         uses: actions/cache@v2
         with:
