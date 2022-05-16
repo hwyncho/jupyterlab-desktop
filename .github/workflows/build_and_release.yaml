@@ -1,0 +1,99 @@
+name: Build and Release JupyterLab Desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag
+        required: true
+      is_prerelease:
+        description: Prerelease
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Tag a version
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
+          tag_name: ${{ github.event.inputs.release_tag }}
+          target_commitish: ${{ github.ref }}
+          token: ${{ github.token }}
+
+  build-and-release:
+    strategy:
+      matrix:
+        runner:
+          - platform: linux
+            platform-name: Linux
+            architecture: x86_64
+            os: ubuntu-20.04
+          - platform: mac
+            platform-name: macOS
+            architecture: x86_64
+            os: macos-10.15
+          - platform: win
+            platform-name: Windows
+            architecture: x86_64
+            os: windows-2019
+          - platform: mac
+            platform-name: macOS
+            architecture: arm64
+            os: [self-hosted, hwyncho-mac-arm64]
+
+    runs-on: ${{ matrix.runner.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Install NodeJS 16
+        if: ${{ matrix.runnner.architecture != "arm64" }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Set up npm cache
+        if: ${{ matrix.runnner.architecture != "arm64" }}
+        id: npm-cache
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm
+      - name: Setup NodeJS environment
+        shell: bash
+        run: |
+          npm install --force
+      - name: Build JupyterLab Desktop
+        shell: bash
+        run: |
+          npm run dist:${{ matrix.runner.platform }}
+
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            mv dist/JupyterLab.deb dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runnner.architecture }}.deb
+            mv dist/JupyterLab.rpm dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runnner.architecture }}.rpm
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            mv dist/JupyterLab.pkg dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runnner.architecture }}.pkg
+          elif [[ "${{ runner.os }}" == "Windows" ]]; then
+            mv dist/JupyterLab-Setup.exe dist/JupyterLab-${{ github.event.inputs.release_tag }}-${{ matrix.runnner.architecture }}.exe
+          else
+            exit 1
+          fi
+      - name: Release JupyterLab Desktop
+        id: release-application
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/JupyterLab-*.deb
+            dist/JupyterLab-*.rpm
+            dist/JupyterLab-*.pkg
+            dist/JupyterLab-*.exe
+          tag_name: ${{ github.event.inputs.release_tag }}
+          target_commitish: ${{ github.ref }}
+          token: ${{ github.token }}
