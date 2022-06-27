@@ -41,13 +41,6 @@ const desktopExtension: JupyterFrontEndPlugin<void> = {
             window.location.hash = hash;
         });
 
-        app.commands.addCommand('check-for-updates', {
-            label: 'Check for Updates…',
-            execute: () => {
-                asyncRemoteRenderer.runRemoteMethod(IAppRemoteInterface.checkForUpdates, void(0));
-            }
-        });
-
         app.commands.addCommand('open-dev-tools', {
             label: 'Open Developer Tools',
             execute: () => {
@@ -57,13 +50,12 @@ const desktopExtension: JupyterFrontEndPlugin<void> = {
 
         menu.helpMenu.addGroup([
             { command: 'open-dev-tools' },
-            { command: 'check-for-updates' }
         ], 20);
 
         const changeEnvironment = async () => {
             asyncRemoteRenderer.runRemoteMethod(IAppRemoteInterface.showPythonPathSelector, void(0));
         };
-      
+
         const statusItem = new EnvironmentStatus({ name: 'env', description: '', onClick: changeEnvironment });
 
         statusBar.registerStatusItem('jupyterlab-desktop-py-env-status', {

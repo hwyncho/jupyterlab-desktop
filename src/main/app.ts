@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 
 import {
-    app, BrowserWindow, dialog, ipcMain, shell
+    app, BrowserWindow, dialog, ipcMain
 } from 'electron';
 
 import {
@@ -22,9 +22,6 @@ import log from 'electron-log';
 import { AsyncRemote, asyncRemoteMain } from '../asyncremote';
 import { IPythonEnvironment } from './tokens';
 import { IRegistry } from './registry';
-import fetch from 'node-fetch';
-import * as yaml from 'js-yaml';
-import * as semver from 'semver';
 import * as ejs from 'ejs';
 import * as path from 'path';
 
@@ -96,10 +93,6 @@ interface IClosingService {
 export
 namespace IAppRemoteInterface {
     export
-    let checkForUpdates: AsyncRemote.IMethod<void, void> = {
-        id: 'JupyterLabDesktop-check-for-updates'
-    };
-    export
     let openDevTools: AsyncRemote.IMethod<void, void> = {
         id: 'JupyterLabDesktop-open-dev-tools'
     };
@@ -142,7 +135,6 @@ class JupyterApplication implements IApplication, IStatefulService {
         });
 
         this._applicationState = {
-            checkForUpdatesAutomatically: true,
             pythonPath: '',
         };
 
@@ -165,12 +157,6 @@ class JupyterApplication implements IApplication, IStatefulService {
                     this._applicationState.pythonPath = pythonPath;
                 } else {
                     this._showPythonSelectorDialog('invalid-setting');
-                }
-
-                if (this._applicationState.checkForUpdatesAutomatically) {
-                    setTimeout(() => {
-                        this._checkForUpdates('on-new-version');
-                    }, 5000);
                 }
             });
     }
@@ -244,7 +230,6 @@ class JupyterApplication implements IApplication, IStatefulService {
         });
     }
 
-
     private _saveState(): Promise<void> {
         return new Promise<void>((res, rej) => {
             this._appState
@@ -302,14 +287,6 @@ class JupyterApplication implements IApplication, IStatefulService {
             this._window = window;
         });
 
-        ipcMain.on('set-check-for-updates-automatically', (_event, autoUpdate) => {
-            this._applicationState.checkForUpdatesAutomatically = autoUpdate;
-        });
-
-        ipcMain.on('launch-installer-download-page', () => {
-            shell.openExternal('https://github.com/jupyterlab/jupyterlab-desktop/releases');
-        });
-
         ipcMain.on('select-python-path', (event) => {
             const currentEnv = this._registry.getCurrentPythonEnvironment();
 
@@ -343,12 +320,6 @@ class JupyterApplication implements IApplication, IStatefulService {
         });
         
 
-        asyncRemoteMain.registerRemoteMethod(IAppRemoteInterface.checkForUpdates,
-            (): Promise<void> => {
-                this._checkForUpdates('always');
-                return Promise.resolve();
-            });
-
         asyncRemoteMain.registerRemoteMethod(IAppRemoteInterface.openDevTools,
             (): Promise<void> => {
                 this._window.webContents.openDevTools();
@@ -370,53 +341,6 @@ class JupyterApplication implements IApplication, IStatefulService {
                 this._showPythonSelectorDialog('change');
                 return Promise.resolve();
             });
-    }
-
-    private _showUpdateDialog(type: 'updates-available' | 'error' | 'no-updates') {
-        const dialog = new BrowserWindow({
-            title: 'JupyterLab Update',
-            width: 400,
-            height: 150,
-            resizable: false,
-            webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: false
-            }
-        });
-        dialog.setMenuBarVisibility(false);
-
-        const checkForUpdatesAutomatically = this._applicationState.checkForUpdatesAutomatically !== false;
-        const message =
-            type === 'error' ? 'Error occurred while checking for updates!' :
-            type === 'no-updates' ? 'There are no updates available.' :
-            `There is a new version available. Download the latest version from <a href="javascript:void(0)" onclick='handleReleasesLink(this);'>the Releases page</a>.`;
-
-        const template = `
-            <body style="background: rgba(238,238,238,1); font-size: 13px; font-family: Helvetica, Arial, sans-serif">
-            <div style="height: 100%; display: flex;flex-direction: column; justify-content: space-between;">
-                <div>
-                <%- message %>
-                </div>
-                <div>
-                    <label><input type='checkbox' <%= checkForUpdatesAutomatically ? 'checked' : '' %> onclick='handleAutoCheckForUpdates(this);'>Check for updates automatically</label>
-                </div>
-            </div>
-
-            <script>
-                const ipcRenderer = require('electron').ipcRenderer;
-
-                function handleAutoCheckForUpdates(el) {
-                    ipcRenderer.send('set-check-for-updates-automatically', el.checked);
-                }
-
-                function handleReleasesLink(el) {
-                    ipcRenderer.send('launch-installer-download-page');
-                }
-            </script>
-            </body>
-        `;
-        const pageSource = ejs.render(template, {message, checkForUpdatesAutomatically});
-        dialog.loadURL(`data:text/html;charset=utf-8,${pageSource}`);
     }
 
     private _showPythonSelectorDialog(reason: 'change' | 'invalid-setting' = 'change') {
@@ -528,31 +452,6 @@ class JupyterApplication implements IApplication, IStatefulService {
         `;
         const pageSource = ejs.render(template, {useBundledPythonPath, pythonPath});
         dialog.loadURL(`data:text/html;charset=utf-8,${pageSource}`);
-    }
-
-    private _checkForUpdates(showDialog: 'on-new-version' | 'always') {
-        fetch('https://github.com/jupyterlab/jupyterlab-desktop/releases/latest/download/latest.yml').then(async (response) => {
-            try {
-                const data = await response.text();
-                const latestReleaseData = yaml.load(data);
-                const latestVersion = (latestReleaseData as any).version;
-                const currentVersion = app.getVersion();
-                const newVersionAvailable = semver.compare(currentVersion, latestVersion) === -1;
-                if (showDialog === 'always' || newVersionAvailable) {
-                    this._showUpdateDialog(newVersionAvailable ? 'updates-available' : 'no-updates');
-                }
-            } catch (error) {
-                if (showDialog === 'always') {
-                    this._showUpdateDialog('error');
-                }
-                console.error('Failed to check for updates:', error);
-            }
-        }).catch((error) => {
-            if (showDialog === 'always') {
-                this._showUpdateDialog('error');
-            }
-            console.error('Failed to check for updates:', error);
-        });
     }
 
     private _quit(): void {
