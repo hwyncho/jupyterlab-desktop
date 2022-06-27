@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 
 import {
-    app, BrowserWindow, dialog, ipcMain, shell
+    app, BrowserWindow, dialog, ipcMain
 } from 'electron';
 
 import {
@@ -22,9 +22,6 @@ import log from 'electron-log';
 import { AsyncRemote, asyncRemoteMain } from '../asyncremote';
 import { IPythonEnvironment } from './tokens';
 import { IRegistry } from './registry';
-import fetch from 'node-fetch';
-import * as yaml from 'js-yaml';
-import * as semver from 'semver';
 import * as ejs from 'ejs';
 import * as path from 'path';
 
@@ -161,12 +158,6 @@ class JupyterApplication implements IApplication, IStatefulService {
                 } else {
                     this._showPythonSelectorDialog('invalid-setting');
                 }
-
-                if (this._applicationState.checkForUpdatesAutomatically) {
-                    setTimeout(() => {
-                        this._checkForUpdates('on-new-version');
-                    }, 5000);
-                }
             });
     }
 
@@ -238,7 +229,6 @@ class JupyterApplication implements IApplication, IStatefulService {
                 .catch((state: JSONObject) => res(state));
         });
     }
-
 
     private _saveState(): Promise<void> {
         return new Promise<void>((res, rej) => {
@@ -351,53 +341,6 @@ class JupyterApplication implements IApplication, IStatefulService {
                 this._showPythonSelectorDialog('change');
                 return Promise.resolve();
             });
-    }
-
-    private _showUpdateDialog(type: 'updates-available' | 'error' | 'no-updates') {
-        const dialog = new BrowserWindow({
-            title: 'JupyterLab Update',
-            width: 400,
-            height: 150,
-            resizable: false,
-            webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: false
-            }
-        });
-        dialog.setMenuBarVisibility(false);
-
-        const checkForUpdatesAutomatically = this._applicationState.checkForUpdatesAutomatically !== false;
-        const message =
-            type === 'error' ? 'Error occurred while checking for updates!' :
-            type === 'no-updates' ? 'There are no updates available.' :
-            `There is a new version available. Download the latest version from <a href="javascript:void(0)" onclick='handleReleasesLink(this);'>the Releases page</a>.`;
-
-        const template = `
-            <body style="background: rgba(238,238,238,1); font-size: 13px; font-family: Helvetica, Arial, sans-serif">
-            <div style="height: 100%; display: flex;flex-direction: column; justify-content: space-between;">
-                <div>
-                <%- message %>
-                </div>
-                <div>
-                    <label><input type='checkbox' <%= checkForUpdatesAutomatically ? 'checked' : '' %> onclick='handleAutoCheckForUpdates(this);'>Check for updates automatically</label>
-                </div>
-            </div>
-
-            <script>
-                const ipcRenderer = require('electron').ipcRenderer;
-
-                function handleAutoCheckForUpdates(el) {
-                    ipcRenderer.send('set-check-for-updates-automatically', el.checked);
-                }
-
-                function handleReleasesLink(el) {
-                    ipcRenderer.send('launch-installer-download-page');
-                }
-            </script>
-            </body>
-        `;
-        const pageSource = ejs.render(template, {message, checkForUpdatesAutomatically});
-        dialog.loadURL(`data:text/html;charset=utf-8,${pageSource}`);
     }
 
     private _showPythonSelectorDialog(reason: 'change' | 'invalid-setting' = 'change') {
