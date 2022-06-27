@@ -96,10 +96,6 @@ interface IClosingService {
 export
 namespace IAppRemoteInterface {
     export
-    let checkForUpdates: AsyncRemote.IMethod<void, void> = {
-        id: 'JupyterLabDesktop-check-for-updates'
-    };
-    export
     let openDevTools: AsyncRemote.IMethod<void, void> = {
         id: 'JupyterLabDesktop-open-dev-tools'
     };
@@ -142,7 +138,6 @@ class JupyterApplication implements IApplication, IStatefulService {
         });
 
         this._applicationState = {
-            checkForUpdatesAutomatically: true,
             pythonPath: '',
         };
 
@@ -302,14 +297,6 @@ class JupyterApplication implements IApplication, IStatefulService {
             this._window = window;
         });
 
-        ipcMain.on('set-check-for-updates-automatically', (_event, autoUpdate) => {
-            this._applicationState.checkForUpdatesAutomatically = autoUpdate;
-        });
-
-        ipcMain.on('launch-installer-download-page', () => {
-            shell.openExternal('https://github.com/jupyterlab/jupyterlab-desktop/releases');
-        });
-
         ipcMain.on('select-python-path', (event) => {
             const currentEnv = this._registry.getCurrentPythonEnvironment();
 
@@ -342,12 +329,6 @@ class JupyterApplication implements IApplication, IStatefulService {
             app.quit();
         });
         
-
-        asyncRemoteMain.registerRemoteMethod(IAppRemoteInterface.checkForUpdates,
-            (): Promise<void> => {
-                this._checkForUpdates('always');
-                return Promise.resolve();
-            });
 
         asyncRemoteMain.registerRemoteMethod(IAppRemoteInterface.openDevTools,
             (): Promise<void> => {
@@ -528,31 +509,6 @@ class JupyterApplication implements IApplication, IStatefulService {
         `;
         const pageSource = ejs.render(template, {useBundledPythonPath, pythonPath});
         dialog.loadURL(`data:text/html;charset=utf-8,${pageSource}`);
-    }
-
-    private _checkForUpdates(showDialog: 'on-new-version' | 'always') {
-        fetch('https://github.com/jupyterlab/jupyterlab-desktop/releases/latest/download/latest.yml').then(async (response) => {
-            try {
-                const data = await response.text();
-                const latestReleaseData = yaml.load(data);
-                const latestVersion = (latestReleaseData as any).version;
-                const currentVersion = app.getVersion();
-                const newVersionAvailable = semver.compare(currentVersion, latestVersion) === -1;
-                if (showDialog === 'always' || newVersionAvailable) {
-                    this._showUpdateDialog(newVersionAvailable ? 'updates-available' : 'no-updates');
-                }
-            } catch (error) {
-                if (showDialog === 'always') {
-                    this._showUpdateDialog('error');
-                }
-                console.error('Failed to check for updates:', error);
-            }
-        }).catch((error) => {
-            if (showDialog === 'always') {
-                this._showUpdateDialog('error');
-            }
-            console.error('Failed to check for updates:', error);
-        });
     }
 
     private _quit(): void {
