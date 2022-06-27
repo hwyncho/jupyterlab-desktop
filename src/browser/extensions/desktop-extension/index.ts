@@ -26,8 +26,6 @@ import {
 } from '../../../asyncremote';
 
 import { IAppRemoteInterface } from '../../../main/app';
-import { IPythonEnvironment } from 'src/main/tokens';
-import { EnvironmentStatus } from './envStatus';
 import { ISessions } from "../../../main/sessions";
 
 
@@ -51,30 +49,6 @@ const desktopExtension: JupyterFrontEndPlugin<void> = {
         menu.helpMenu.addGroup([
             { command: 'open-dev-tools' },
         ], 20);
-
-        const changeEnvironment = async () => {
-            asyncRemoteRenderer.runRemoteMethod(IAppRemoteInterface.showPythonPathSelector, void(0));
-        };
-
-        const statusItem = new EnvironmentStatus({ name: 'env', description: '', onClick: changeEnvironment });
-
-        statusBar.registerStatusItem('jupyterlab-desktop-py-env-status', {
-            item: statusItem,
-            align: 'left'
-        });
-
-        const updateStatusItem = (env: IPythonEnvironment) => {
-            statusItem.model.name = env.name;
-            let packages = [];
-            for (const name in env.versions) {
-                packages.push(`${name}: ${env.versions[name]}`);
-            }
-            statusItem.model.description = `${env.name}\n${env.path}\n${packages.join(', ')}`;
-        };
-
-        asyncRemoteRenderer.runRemoteMethod(IAppRemoteInterface.getCurrentPythonEnvironment, void(0)).then((env) => {
-            updateStatusItem(env);
-        });
     },
     autoStart: true
 };
