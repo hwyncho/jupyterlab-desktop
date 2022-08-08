@@ -130,10 +130,10 @@
     "url": "http://jupyter.org"
   },
   "bugs": {
-    "url": "https://github.com/jupyterlab/jupyterlab-desktop/issues"
+    "url": "https://github.com/hwyncho/jupyterlab-desktop/issues"
   },
-  "homepage": "https://github.com/jupyterlab/jupyterlab-desktop#readme",
-  "repository": "github:jupyterlab/jupyterlab",
+  "homepage": "https://github.com/hwyncho/jupyterlab-desktop#readme",
+  "repository": "github:hwyncho/jupyterlab-desktop",
   "license": "BSD-3-Clause",
   "devDependencies": {
     "@types/ejs": "^3.1.0",
