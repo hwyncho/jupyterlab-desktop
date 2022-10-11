@@ -44,7 +44,7 @@ jobs:
           - platform: mac
             platform-name: macOS
             architecture: arm64
-            os: [self-hosted, hwyncho-mac-arm64]
+            os: [self-hosted, hwyncho-runner-mac-arm64]
 
     runs-on: ${{ matrix.runner.os }}
     steps:
